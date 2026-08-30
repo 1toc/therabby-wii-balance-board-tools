@@ -1,0 +1,3 @@
+Load Balance Viewer
+Version: v1.0 β
+Session Data Format: v0.2
