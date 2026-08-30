@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <title>Load Balance Viewer v1.0 β</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <div>
+        <div class="brand">THERABBY</div>
+        <h1>Load Balance Viewer</h1>
+        <p class="subtitle">Wii Balance Board / 4-point load &amp; CoP viewer</p>
+      </div>
+      <div class="connection-panel">
+        <div class="mode-switch" role="group" aria-label="入力モード">
+          <button id="modeMock" class="mode-button active" type="button">MOCK</button>
+          <button id="modeReal" class="mode-button" type="button">REAL WBB</button>
+        </div>
+        <div class="connection-line">
+          <span id="statusDot" class="status-dot mock"></span>
+          <strong id="connectionText">Mock Device</strong>
+        </div>
+        <button id="connectButton" class="connect-button" type="button" hidden>Wii Balance Boardを接続</button>
+      </div>
+    </header>
+
+    <section id="alertBox" class="alert" role="status" aria-live="polite" hidden></section>
+
+    <section class="dashboard">
+      <section class="board-panel panel">
+        <div class="panel-heading">
+          <div>
+            <span class="section-label">LIVE CoP</span>
+            <h2>圧中心をリアルタイム表示</h2>
+          </div>
+          <div id="weightPresence" class="presence-badge on">WEIGHT DETECTED</div>
+        </div>
+
+        <div id="copBoard" class="cop-board" aria-label="Wii Balance Board上のCoP表示">
+          <div class="axis x-axis"></div>
+          <div class="axis y-axis"></div>
+          <span class="axis-label front">FRONT</span>
+          <span class="axis-label back">BACK</span>
+          <span class="axis-label left">LEFT</span>
+          <span class="axis-label right">RIGHT</span>
+          <img class="footprints" src="assets/wii-footprints.png" alt="" aria-hidden="true" />
+          <div id="centerMarker" class="center-marker" title="SET CENTERで登録した基準位置" hidden></div>
+          <div id="copDot" class="cop-dot"><span>CoP</span></div>
+          <div id="noWeightOverlay" class="no-weight" hidden>No weight detected</div>
+        </div>
+
+        <div class="cop-readout">
+          <div><span>X / LEFT-RIGHT</span><strong id="copX">+0.000</strong></div>
+          <div><span>Y / FRONT-BACK</span><strong id="copY">+0.000</strong></div>
+          <div><span>RELATIVE X</span><strong id="relX">+0.000</strong></div>
+          <div><span>RELATIVE Y</span><strong id="relY">+0.000</strong></div>
+        </div>
+      </section>
+
+      <aside class="metrics-column">
+        <section class="panel corners-panel">
+          <div class="panel-heading compact">
+            <div>
+              <span class="section-label">4-POINT LOAD</span>
+              <h2>四隅の荷重</h2>
+            </div>
+          </div>
+          <div class="corner-grid">
+            <article class="corner-card lf">
+              <span>LF / 左前</span>
+              <strong id="lfKg">17.5 kg</strong>
+              <div class="bar"><i id="lfBar"></i></div>
+            </article>
+            <article class="corner-card rf">
+              <span>RF / 右前</span>
+              <strong id="rfKg">17.5 kg</strong>
+              <div class="bar"><i id="rfBar"></i></div>
+            </article>
+            <article class="corner-card lb">
+              <span>LB / 左後</span>
+              <strong id="lbKg">17.5 kg</strong>
+              <div class="bar"><i id="lbBar"></i></div>
+            </article>
+            <article class="corner-card rb">
+              <span>RB / 右後</span>
+              <strong id="rbKg">17.5 kg</strong>
+              <div class="bar"><i id="rbBar"></i></div>
+            </article>
+          </div>
+          <div class="total-card">
+            <span>TOTAL LOAD</span>
+            <strong id="totalKg">70.0 kg</strong>
+          </div>
+        </section>
+
+        <section class="panel ratio-panel">
+          <div class="ratio-row">
+            <div class="ratio-title"><span>LEFT</span><strong id="leftPct">50.0%</strong></div>
+            <div class="balance-track"><i id="lrMarker"></i><span class="midline"></span></div>
+            <div class="ratio-title right-align"><span>RIGHT</span><strong id="rightPct">50.0%</strong></div>
+          </div>
+          <div class="ratio-row">
+            <div class="ratio-title"><span>FRONT</span><strong id="frontPct">50.0%</strong></div>
+            <div class="balance-track"><i id="fbMarker"></i><span class="midline"></span></div>
+            <div class="ratio-title right-align"><span>BACK</span><strong id="backPct">50.0%</strong></div>
+          </div>
+        </section>
+
+        <section class="panel control-panel">
+          <div class="control-buttons">
+            <button id="zeroButton" class="secondary-button" type="button">ZERO</button>
+            <button id="centerButton" class="secondary-button" type="button">SET CENTER</button>
+            <button id="logButton" class="primary-button" type="button">● LOG START</button>
+          </div>
+          <div class="session-info">
+            <div><span>ZERO</span><strong id="zeroState">Not set</strong></div>
+            <div><span>CENTER</span><strong id="centerState">Not set</strong></div>
+            <div><span>LOG</span><strong id="logState">Stopped</strong></div>
+          </div>
+        </section>
+      </aside>
+    </section>
+
+    <section id="mockControls" class="mock-controls panel">
+      <div class="mock-copy">
+        <span class="section-label">MOCK DEVICE</span>
+        <h2>実機なしで動作確認</h2>
+        <p>ボード上の青い点をドラッグするか、下のスライダーを操作してください。</p>
+      </div>
+      <label>体重 <strong id="mockWeightValue">70.0 kg</strong>
+        <input id="mockWeight" type="range" min="0" max="120" value="70" step="0.5" />
+      </label>
+      <button id="mockCenterButton" type="button" class="secondary-button">中央立位へ戻す</button>
+    </section>
+
+    <footer>
+      <p>本ソフトウェアは医療機器ではありません。表示値は評価・観察・練習を補助する情報として使用してください。</p>
+      <p class="version">Load Balance Viewer v1.0 β</p>
+    </footer>
+  </main>
+
+  <script src="session-data-v0.2.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
