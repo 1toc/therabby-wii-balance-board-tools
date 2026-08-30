@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <title>CoP Stability Test v1.0 β</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <div class="title-block">
+        <div class="brand">THERABBY</div>
+        <h1>CoP Stability Test</h1>
+        <p class="subtitle">Wii Balance Board / timed standing &amp; normalized CoP trajectory</p>
+      </div>
+
+      <div class="connection-panel">
+        <div class="mode-switch" role="group" aria-label="入力モード">
+          <button id="modeMock" class="mode-button active" type="button">MOCK</button>
+          <button id="modeReal" class="mode-button" type="button">REAL WBB</button>
+        </div>
+        <div class="connection-line">
+          <span id="statusDot" class="status-dot mock"></span>
+          <strong id="connectionText">Mock Device</strong>
+        </div>
+        <button id="connectButton" class="connect-button" type="button" hidden>Wii Balance Boardを接続</button>
+      </div>
+    </header>
+
+    <section id="alertBox" class="alert" role="status" aria-live="polite" hidden></section>
+
+    <section class="dashboard">
+      <section class="panel board-panel">
+        <div class="panel-heading">
+          <div>
+            <span class="section-label">LIVE CoP TRAJECTORY</span>
+            <h2>静止立位の揺れを記録</h2>
+          </div>
+          <div class="status-stack">
+            <div id="weightPresence" class="presence-badge on">WEIGHT DETECTED</div>
+            <div id="testStateBadge" class="test-badge ready">READY</div>
+          </div>
+        </div>
+
+        <div class="board-wrap">
+          <div id="copBoard" class="cop-board" aria-label="CoP軌跡表示">
+            <canvas id="trailCanvas"></canvas>
+            <div class="axis x-axis"></div>
+            <div class="axis y-axis"></div>
+            <span class="axis-label front">FRONT</span>
+            <span class="axis-label back">BACK</span>
+            <span class="axis-label left">LEFT</span>
+            <span class="axis-label right">RIGHT</span>
+            <img class="footprints" src="assets/wii-footprints.png" alt="" aria-hidden="true" />
+            <div id="meanMarker" class="mean-marker" hidden title="測定中の平均CoP"></div>
+            <div id="copDot" class="cop-dot"><span>CoP</span></div>
+            <div id="noWeightOverlay" class="no-weight" hidden>No weight detected</div>
+            <div id="countdownOverlay" class="countdown-overlay" hidden>
+              <strong id="countdownNumber">3</strong>
+              <span>姿勢を保ってください</span>
+            </div>
+          </div>
+
+          <div class="live-readout">
+            <div><span>CoP X</span><strong id="copX">+0.000</strong></div>
+            <div><span>CoP Y</span><strong id="copY">+0.000</strong></div>
+            <div><span>TOTAL LOAD</span><strong id="totalKg">70.0 kg</strong></div>
+            <div><span>SAMPLES</span><strong id="sampleCount">0</strong></div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="side-column">
+        <section class="panel test-panel">
+          <div class="panel-heading compact">
+            <div>
+              <span class="section-label">TEST CONTROL</span>
+              <h2>測定</h2>
+            </div>
+          </div>
+
+          <div class="duration-select" role="group" aria-label="測定時間">
+            <button class="duration-button" data-duration="10" type="button">10 sec</button>
+            <button class="duration-button active" data-duration="30" type="button">30 sec</button>
+            <button class="duration-button" data-duration="60" type="button">60 sec</button>
+          </div>
+
+          <div class="timer-card">
+            <span id="timerLabel">READY</span>
+            <strong id="timerValue">30.0</strong>
+            <small>seconds</small>
+          </div>
+
+          <div class="test-actions">
+            <button id="zeroButton" class="secondary-button" type="button">ZERO</button>
+            <button id="startButton" class="primary-button" type="button">START TEST</button>
+          </div>
+
+          <div class="condition-grid">
+            <div><span>ZERO</span><strong id="zeroState">Not set</strong></div>
+            <div><span>DURATION</span><strong id="durationState">30 sec</strong></div>
+            <div><span>VALID</span><strong id="validState">—</strong></div>
+            <div><span>MODE</span><strong id="modeState">MOCK</strong></div>
+          </div>
+        </section>
+
+        <section class="panel result-panel">
+          <div class="panel-heading compact result-heading">
+            <div>
+              <span class="section-label">RESULT</span>
+              <h2>測定結果</h2>
+            </div>
+            <button id="saveButton" class="ghost-button" type="button" disabled>SESSION保存</button>
+          </div>
+
+          <div class="result-grid">
+            <article class="result-card primary">
+              <span>NORMALIZED PATH LENGTH</span>
+              <strong id="pathLength">—</strong>
+              <small>norm units</small>
+            </article>
+            <article class="result-card">
+              <span>MEAN VELOCITY</span>
+              <strong id="meanVelocity">—</strong>
+              <small>norm units / s</small>
+            </article>
+            <article class="result-card">
+              <span>ML RANGE</span>
+              <strong id="mlRange">—</strong>
+              <small>left-right</small>
+            </article>
+            <article class="result-card">
+              <span>AP RANGE</span>
+              <strong id="apRange">—</strong>
+              <small>front-back</small>
+            </article>
+            <article class="result-card">
+              <span>RMS SWAY</span>
+              <strong id="rmsSway">—</strong>
+              <small>from mean CoP</small>
+            </article>
+            <article class="result-card">
+              <span>MEAN LOAD</span>
+              <strong id="meanLoad">—</strong>
+              <small>kg</small>
+            </article>
+          </div>
+
+          <div id="resultNote" class="result-note">
+            測定終了後に結果を表示します。
+          </div>
+        </section>
+      </aside>
+    </section>
+
+    <section id="mockControls" class="mock-controls panel">
+      <div class="mock-copy">
+        <span class="section-label">MOCK DEVICE</span>
+        <h2>実機なしで試す</h2>
+        <p>青いCoP点をドラッグできます。「自動揺れ」で静止立位の疑似揺れを再生できます。</p>
+      </div>
+      <label>体重 <strong id="mockWeightValue">70.0 kg</strong>
+        <input id="mockWeight" type="range" min="0" max="120" value="70" step="0.5" />
+      </label>
+      <div class="mock-actions">
+        <button id="mockCenterButton" type="button" class="secondary-button">中央へ戻す</button>
+        <button id="mockSwayButton" type="button" class="secondary-button">自動揺れ ON</button>
+      </div>
+    </section>
+
+    <footer>
+      <p>本ソフトウェアは医療機器・標準化された臨床評価機器ではありません。結果は正規化CoPに基づく参考値です。</p>
+      <p class="version">CoP Stability Test v1.0 β</p>
+    </footer>
+  </main>
+
+  <script src="session-data-v0.2.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
