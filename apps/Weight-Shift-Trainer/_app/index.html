@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <title>Weight Shift Trainer v1.0 β</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <div>
+        <div class="brand">THERABBY</div>
+        <h1>Weight Shift Trainer</h1>
+        <p>左右・前後への荷重移動を、正規化CoPでリアルタイムにガイドします。</p>
+      </div>
+
+      <div class="device-box">
+        <div class="mode-switch" role="group" aria-label="入力モード">
+          <button id="modeReal" class="mode-btn" type="button">REAL WBB</button>
+          <button id="modeMock" class="mode-btn active" type="button">MOCK</button>
+        </div>
+        <div class="device-state">
+          <span id="statusDot" class="dot-status on"></span>
+          <strong id="connectionText">Mock Device</strong>
+        </div>
+        <button id="connectButton" class="connect-btn" type="button" hidden>Wii Balance Boardを接続</button>
+      </div>
+    </header>
+
+    <section id="alertBox" class="alert" hidden></section>
+
+    <section class="main-grid">
+      <section class="panel load-panel">
+        <div class="panel-head">
+          <div>
+            <span>REAL-TIME LOAD</span>
+            <h2>4点荷重</h2>
+          </div>
+          <small>単位: kg</small>
+        </div>
+
+        <div class="load-quadrants">
+          <article><span>LF</span><strong id="lfKg">17.5</strong></article>
+          <article><span>RF</span><strong id="rfKg">17.5</strong></article>
+          <article><span>LB</span><strong id="lbKg">17.5</strong></article>
+          <article><span>RB</span><strong id="rbKg">17.5</strong></article>
+        </div>
+
+        <div class="summary-list">
+          <div><span>総荷重</span><strong id="totalKg">70.0 kg</strong></div>
+          <div><span>左右比</span><strong id="lrRatio">50 : 50</strong></div>
+          <div><span>前後比</span><strong id="fbRatio">50 : 50</strong></div>
+        </div>
+
+        <button id="zeroButton" class="secondary-button" type="button">ZERO</button>
+        <div class="zero-note">実機ではボードから降りた状態でZEROを実行してください。</div>
+      </section>
+
+      <section class="panel cop-panel">
+        <div class="panel-head">
+          <div>
+            <span>GUIDED CoP</span>
+            <h2>荷重移動ガイド</h2>
+          </div>
+          <div id="weightBadge" class="weight-badge on">WEIGHT DETECTED</div>
+        </div>
+
+        <div id="copBoard" class="cop-board">
+          <canvas id="trailCanvas"></canvas>
+          <div class="grid-lines"></div>
+          <div class="axis horizontal"></div>
+          <div class="axis vertical"></div>
+          <span class="axis-label front">FRONT</span>
+          <span class="axis-label back">BACK</span>
+          <span class="axis-label left">LEFT</span>
+          <span class="axis-label right">RIGHT</span>
+          <img class="footprints" src="assets/wii-footprints.png" alt="" aria-hidden="true" />
+          <div id="targetZone" class="target-zone"><span>TARGET</span></div>
+          <div id="copDot" class="cop-dot"><span>CoP</span></div>
+          <div id="noWeight" class="no-weight" hidden>NO WEIGHT</div>
+          <div id="countdown" class="countdown" hidden><strong id="countdownNumber">3</strong><span>姿勢を整えてください</span></div>
+        </div>
+
+        <div class="cop-values">
+          <div><span>CoP X</span><strong id="copX">+0.000</strong></div>
+          <div><span>CoP Y</span><strong id="copY">+0.000</strong></div>
+          <div><span>距離</span><strong id="targetDistance">0.300</strong></div>
+          <div><span>許容範囲</span><strong id="targetRadius">±0.100</strong></div>
+        </div>
+      </section>
+
+      <aside class="right-column">
+        <section class="panel task-panel">
+          <div class="task-label">CURRENT TASK</div>
+          <h2 id="taskTitle">右へ荷重移動</h2>
+          <div class="timer" id="timer">00:20</div>
+          <span class="timer-label">残り時間</span>
+          <div class="progress"><i id="progressBar"></i></div>
+          <strong class="rep" id="repText">0 / 10</strong>
+
+          <div id="feedbackBox" class="feedback neutral">
+            <strong id="feedbackTitle">準備OK</strong>
+            <p id="feedbackText">STARTを押すと3秒後に開始します。</p>
+          </div>
+
+          <div class="task-actions">
+            <button id="startButton" class="primary-button" type="button">START</button>
+            <button id="stopButton" class="danger-button" type="button" disabled>中止</button>
+          </div>
+        </section>
+
+        <section class="panel settings-panel">
+          <div class="panel-head compact">
+            <div>
+              <span>TRAINING SETTINGS</span>
+              <h2>課題設定</h2>
+            </div>
+          </div>
+
+          <label>方向
+            <select id="directionSelect">
+              <option value="right">右</option>
+              <option value="left">左</option>
+              <option value="front">前</option>
+              <option value="back">後</option>
+              <option value="alternate-lr">左右交互</option>
+              <option value="alternate-fb">前後交互</option>
+            </select>
+          </label>
+
+          <label>目標距離
+            <select id="distanceSelect">
+              <option value="0.20">0.20 / やさしい</option>
+              <option value="0.30" selected>0.30 / 標準</option>
+              <option value="0.40">0.40 / 大きい</option>
+            </select>
+          </label>
+
+          <label>保持時間
+            <select id="holdSelect">
+              <option value="0.5">0.5秒</option>
+              <option value="1.0" selected>1.0秒</option>
+              <option value="2.0">2.0秒</option>
+            </select>
+          </label>
+
+          <label>反復回数
+            <select id="repSelect">
+              <option value="5">5回</option>
+              <option value="10" selected>10回</option>
+              <option value="20">20回</option>
+            </select>
+          </label>
+
+          <label>制限時間
+            <select id="durationSelect">
+              <option value="20" selected>20秒</option>
+              <option value="30">30秒</option>
+              <option value="60">60秒</option>
+            </select>
+          </label>
+        </section>
+      </aside>
+    </section>
+
+    <section class="panel results-panel">
+      <div class="panel-head">
+        <div>
+          <span>SESSION RESULT</span>
+          <h2>結果</h2>
+        </div>
+        <button id="saveButton" class="ghost-button" type="button" disabled>SESSION保存</button>
+      </div>
+
+      <div class="results-grid">
+        <article><span>達成回数</span><strong id="resultSuccess">—</strong><small>reps</small></article>
+        <article><span>成功率</span><strong id="resultRate">—</strong><small>%</small></article>
+        <article><span>平均到達時間</span><strong id="resultReach">—</strong><small>sec</small></article>
+        <article><span>平均保持時間</span><strong id="resultHold">—</strong><small>sec</small></article>
+        <article><span>平均目標誤差</span><strong id="resultError">—</strong><small>norm</small></article>
+        <article><span>総CoP移動距離</span><strong id="resultPath">—</strong><small>norm</small></article>
+      </div>
+      <p id="resultNote" class="result-note">トレーニング終了後に結果を表示します。</p>
+    </section>
+
+    <section id="mockControls" class="panel mock-controls">
+      <div>
+        <span class="small-label">MOCK DEVICE</span>
+        <h2>実機なしで操作確認</h2>
+        <p>CoP点をドラッグして荷重移動できます。自動練習をONにすると目標へ自動で移動します。</p>
+      </div>
+      <label>体重 <strong id="mockWeightValue">70.0 kg</strong>
+        <input id="mockWeight" type="range" min="0" max="120" value="70" step="0.5" />
+      </label>
+      <div class="mock-buttons">
+        <button id="mockCenterButton" class="secondary-button" type="button">中央へ</button>
+        <button id="mockAutoButton" class="secondary-button" type="button">自動練習 ON</button>
+      </div>
+    </section>
+
+    <footer>
+      <p>本ソフトウェアは医療機器・標準化された臨床評価機器ではありません。CoPは正規化座標です。</p>
+      <span>Weight Shift Trainer v1.0 β</span>
+    </footer>
+  </main>
+
+  <script src="session-data-v0.2.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
