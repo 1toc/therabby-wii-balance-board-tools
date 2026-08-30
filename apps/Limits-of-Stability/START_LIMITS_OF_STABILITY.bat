@@ -1,0 +1,5 @@
+@echo off
+setlocal
+cd /d "%~dp0"
+start "" powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "%~dp0_app\_server.ps1"
+exit /b 0

@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <title>Limits of Stability v1.0 β</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<main class="app-shell">
+  <header class="topbar">
+    <div class="title-block">
+      <div class="brand">THERABBY</div>
+      <h1>Limits of Stability</h1>
+      <p>4・8方向へのCoP移動から、正規化された移動可能範囲を可視化します。</p>
+    </div>
+
+    <div class="device-box">
+      <div class="mode-switch" role="group" aria-label="入力モード">
+        <button id="modeReal" class="mode-btn" type="button">REAL WBB</button>
+        <button id="modeMock" class="mode-btn active" type="button">MOCK</button>
+      </div>
+      <div class="device-state"><span id="statusDot" class="status-dot on"></span><strong id="connectionText">Mock Device</strong></div>
+      <button id="connectButton" class="connect-btn" type="button" hidden>Wii Balance Boardを接続</button>
+    </div>
+  </header>
+
+  <section id="alertBox" class="alert" hidden></section>
+
+  <section class="main-grid">
+    <section class="panel map-panel">
+      <div class="panel-head">
+        <div>
+          <span class="eyebrow">LIVE REACH MAP</span>
+          <h2>移動可能範囲</h2>
+        </div>
+        <div class="badges">
+          <span id="weightBadge" class="badge green">WEIGHT DETECTED</span>
+          <span id="centerBadge" class="badge">CENTER NOT SET</span>
+        </div>
+      </div>
+
+      <div id="losBoard" class="los-board">
+        <canvas id="trailCanvas"></canvas>
+        <div class="rings"></div>
+        <div class="axis horizontal"></div>
+        <div class="axis vertical"></div>
+        <div class="diag d1"></div>
+        <div class="diag d2"></div>
+        <span class="axis-label front">FRONT</span>
+        <span class="axis-label back">BACK</span>
+        <span class="axis-label left">LEFT</span>
+        <span class="axis-label right">RIGHT</span>
+        <img class="footprints" src="assets/wii-footprints.png" alt="" aria-hidden="true" />
+        <div id="centerMarker" class="center-marker" hidden><span>CENTER</span></div>
+                <div id="peakMarker" class="peak-marker" hidden><span>PEAK</span></div>
+        <div id="copDot" class="cop-dot"><span>CoP</span></div>
+        <div id="noWeight" class="no-weight" hidden>NO WEIGHT</div>
+        <div id="countdown" class="countdown" hidden><strong id="countdownNumber">3</strong><span>姿勢を整えてください</span></div>
+      </div>
+
+      <div class="live-readout">
+        <div><span>ABS X</span><strong id="absX">+0.000</strong></div>
+        <div><span>ABS Y</span><strong id="absY">+0.000</strong></div>
+        <div><span>REL X</span><strong id="relX">+0.000</strong></div>
+        <div><span>REL Y</span><strong id="relY">+0.000</strong></div>
+        <div><span>TOTAL</span><strong id="totalKg">70.0 kg</strong></div>
+      </div>
+    </section>
+
+    <aside class="right-column">
+      <section class="panel protocol-panel">
+        <div class="stage-label">CURRENT STAGE</div>
+        <h2 id="stageTitle">STARTを押してください</h2>
+        <div id="directionDisplay" class="direction-display center-mode">
+          <div id="directionArrow" class="direction-arrow">◎</div>
+          <div>
+            <strong id="directionName">CENTER</strong>
+            <span id="directionIndex">開始位置</span>
+          </div>
+        </div>
+
+        <div class="timer-wrap">
+          <span id="timerLabel">READY</span>
+          <strong id="timerValue">5.0</strong>
+          <small>sec</small>
+        </div>
+
+        <div class="progress"><i id="progressBar"></i></div>
+
+        <div id="feedbackBox" class="feedback neutral">
+          <strong id="feedbackTitle">準備は自動です</strong>
+          <p id="feedbackText">REAL WBBでは、START後にZEROとCENTERを順番に自動設定します。</p>
+        </div>
+
+        <div class="protocol-actions simple">
+          <button id="startButton" class="primary-button big" type="button">START TEST</button>
+          <button id="stopButton" class="danger-button" type="button" disabled>中止</button>
+        </div>
+
+        <details class="advanced-tools">
+          <summary>詳細操作</summary>
+          <div class="advanced-actions">
+            <button id="zeroButton" class="secondary-button" type="button">ZEROのみ実行</button>
+            <button id="centerButton" class="secondary-button" type="button">CENTERのみ再設定</button>
+          </div>
+        </details>
+      </section>
+
+      <section class="panel settings-panel">
+        <div class="panel-head compact">
+          <div><span class="eyebrow">TEST SETTINGS</span><h2>テスト条件</h2></div>
+        </div>
+
+        <label>方向数
+          <select id="directionCount">
+            <option value="4">4方向</option>
+            <option value="8" selected>8方向</option>
+          </select>
+        </label>
+
+        <div class="preset-info">
+          <div><span>1方向の測定</span><strong>5秒</strong></div>
+          <div><span>中央保持</span><strong>1秒</strong></div>
+          <div><span>中央判定</span><strong>±0.10</strong></div>
+        </div>
+
+        <div class="safety-note">
+          <strong>安全</strong>
+          <p>「できるだけ遠く」は、転倒しそうになるまで行く意味ではありません。足を動かさず、安全に戻れる範囲で実施してください。</p>
+        </div>
+      </section>
+    </aside>
+  </section>
+
+  <section class="lower-grid">
+    <section class="panel result-map-panel">
+      <div class="panel-head">
+        <div><span class="eyebrow">RESULT MAP</span><h2>方向別最大到達</h2></div>
+        <button id="saveButton" class="ghost-button" type="button" disabled>SESSION保存</button>
+      </div>
+      <canvas id="resultCanvas" width="560" height="420" aria-label="方向別最大到達ポリゴン"></canvas>
+    </section>
+
+    <section class="panel summary-panel">
+      <div class="panel-head compact"><div><span class="eyebrow">SUMMARY</span><h2>結果</h2></div></div>
+      <div class="summary-grid">
+        <article><span>平均最大到達</span><strong id="meanExcursion">—</strong><small>norm</small></article>
+        <article><span>最大方向</span><strong id="bestDirection">—</strong><small>direction</small></article>
+        <article><span>最小方向</span><strong id="worstDirection">—</strong><small>direction</small></article>
+        <article><span>左右差</span><strong id="lrDifference">—</strong><small>norm</small></article>
+        <article><span>前後差</span><strong id="fbDifference">—</strong><small>norm</small></article>
+        <article><span>総CoP移動距離</span><strong id="totalPath">—</strong><small>norm</small></article>
+      </div>
+      <div id="directionResults" class="direction-results"></div>
+      <p id="resultNote" class="result-note">テスト終了後に方向別の最大到達量を表示します。</p>
+    </section>
+  </section>
+
+  <section id="mockControls" class="panel mock-controls">
+    <div>
+      <span class="eyebrow">MOCK DEVICE</span>
+      <h2>実機なしで確認</h2>
+      <p>CoPをドラッグできます。「自動テスト」をONにすると現在の方向へ自動的に移動して戻ります。</p>
+    </div>
+    <label>体重 <strong id="mockWeightValue">70.0 kg</strong>
+      <input id="mockWeight" type="range" min="0" max="120" value="70" step="0.5" />
+    </label>
+    <div class="mock-actions">
+      <button id="mockCenterButton" class="secondary-button" type="button">中央へ</button>
+      <button id="mockAutoButton" class="secondary-button" type="button">自動テスト ON</button>
+    </div>
+  </section>
+
+  <footer>
+    <p>本ソフトウェアは医療機器・標準化された臨床評価機器ではありません。結果は正規化CoPに基づく参考値です。</p>
+    <span>Limits of Stability v1.0 β</span>
+  </footer>
+</main>
+<script src="session-data-v0.2.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
