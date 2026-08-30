@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="color-scheme" content="light" />
+  <title>Session Log & Report v1.0 β</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">◎</div>
+      <div>
+        <h1>Session Log & Report</h1>
+        <p>v1.0 β · Wii Balance Board Session Data Format v0.2</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <span id="datasetBadge" class="top-status">NO DATA</span>
+      <button id="printButton" class="ghost-button" type="button" disabled>レポートを印刷</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="sidebar">
+      <section class="side-section">
+        <div class="side-title-row">
+          <h2>データの読み込み</h2>
+          <button id="clearButton" class="text-button" type="button" disabled>クリア</button>
+        </div>
+        <label id="dropZone" class="drop-zone" tabindex="0">
+          <input id="fileInput" type="file" multiple accept=".json,.csv,application/json,text/csv" />
+          <div class="drop-icon">⇩</div>
+          <strong>ファイルをドラッグ＆ドロップ</strong>
+          <span>またはクリックして選択</span>
+          <small>summary.json だけでも表示できます<br>samples.csv / events.csv を追加すると詳細が増えます</small>
+        </label>
+        <div id="loadMessage" class="load-message" hidden></div>
+      </section>
+
+      <section class="side-section sessions-section">
+        <div class="side-title-row">
+          <h2>読み込み済みセッション</h2>
+          <span id="sessionCount" class="count-badge">0</span>
+        </div>
+        <div id="sessionList" class="session-list">
+          <div class="empty-mini">まだセッションはありません。</div>
+        </div>
+      </section>
+
+      <section class="side-section view-section">
+        <h2>表示</h2>
+        <button id="overviewButton" class="view-button active" type="button" disabled>
+          <span class="view-icon">▦</span>
+          <span><strong>セッション一覧</strong><small>読み込んだデータの全体像</small></span>
+        </button>
+        <button id="comparisonButton" class="view-button" type="button" disabled>
+          <span class="view-icon">↔</span>
+          <span><strong>同一アプリ比較</strong><small>2セッション以上で有効</small></span>
+        </button>
+      </section>
+
+      <section class="side-section side-note">
+        <h2>データの扱い</h2>
+        <p>患者名・カルテ番号などの直接識別情報を必要としません。読み込んだファイルはブラウザ内で処理し、外部へ送信しません。</p>
+      </section>
+    </aside>
+
+    <section class="workspace">
+      <div id="emptyState" class="empty-state">
+        <div class="empty-visual">
+          <div class="empty-ring ring-a"></div>
+          <div class="empty-ring ring-b"></div>
+          <div class="empty-dot"></div>
+        </div>
+        <h2>Session Dataを読み込んでください</h2>
+        <p>1セッションの <strong>summary.json</strong> だけでも開始できます。<br>samples.csv と events.csv があれば、軌跡・時系列・イベントまで表示します。</p>
+        <button id="emptySelectButton" class="primary-button" type="button">ファイルを選択</button>
+        <div class="file-role-grid">
+          <div><b>summary.json</b><span>主要結果・条件</span></div>
+          <div><b>samples.csv</b><span>CoP・荷重の時系列</span></div>
+          <div><b>events.csv</b><span>課題中の出来事</span></div>
+        </div>
+      </div>
+
+      <div id="overviewView" class="view" hidden></div>
+      <div id="sessionView" class="view" hidden></div>
+      <div id="comparisonView" class="view" hidden></div>
+    </section>
+  </main>
+
+  <template id="sessionCardTemplate">
+    <button class="session-card" type="button">
+      <span class="session-color"></span>
+      <span class="session-card-copy">
+        <strong class="session-app"></strong>
+        <span class="session-date"></span>
+        <small class="session-files"></small>
+      </span>
+      <span class="session-arrow">›</span>
+    </button>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>

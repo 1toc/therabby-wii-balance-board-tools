@@ -1,0 +1,3 @@
+Session Log & Report
+Version: v1.0 β
+Supported Session Data Format: v0.2
