@@ -1,48 +1,38 @@
 # Session Log & Report v1.0 β
 
-Wii Balance Board Toolsが出力したSession Data Format v0.2を読み込み、1セッションの可視化から複数セッション比較まで行うブラウザアプリです。
+5つのWii Balance Boardアプリが出力する **Session Data Format v0.2** を読み込み、1セッションの結果表示から同一アプリの経時比較まで行うレポートツールです。
 
 ## Version
 
 - App: **v1.0 β**
 - Supported Session Data Format: **v0.2**
 
-## 読み込めるファイル
-
-- `*-summary.json`
-- `*-samples.csv`
-- `*-events.csv`
-
-`summary.json`だけでも主要結果を表示できます。`samples.csv`を追加するとCoP軌跡・時系列グラフ、`events.csv`を追加するとイベントログまで表示します。
-
 ## 主な機能
 
-- 1セッションレポート
-- アプリ別グラフ
-- 今回の特徴の記述
-- 生活場面で確認する候補
+- `summary.json` 単独での読み込み
+- `summary.json + samples.csv + events.csv` の3ファイル読み込み
+- アプリ別グラフ表示
 - 同一アプリの複数セッション比較
-- 印刷
-- ファイルはブラウザ内で処理
-
-## 起動
-
-黒いコマンド画面を出さずに起動する場合：
-
-`START_SESSION_LOG_REPORT.vbs`
-
-または：
-
-`START_SESSION_LOG_REPORT.bat`
+- セッション概要・指標・イベントの可視化
+- 記述的な自動コメント
+- 生活場面で確認したい候補の提示
 
 ## 対応アプリ
 
 - Load Balance Viewer
 - CoP Stability Test
-- Weight Shift Trainer
 - Limits of Stability
+- Weight Shift Trainer
 - Balance Controller
+
+## 起動
+
+`START_SESSION_LOG_REPORT.bat` をダブルクリックしてください。
+
+## データについて
+
+Session Log & Report自体はWii Balance Boardへ接続しません。各アプリから保存したSession Data Format v0.2のファイルを読み込んで使用します。
 
 ## 注意
 
-表示される正規化CoPや各アプリ固有指標は標準化された臨床評価スコアではありません。同一条件での経時比較、実際の動作観察、臨床家の判断と組み合わせて使用してください。
+自動コメントは診断や転倒リスク判定ではなく、データ上の特徴を記述するための補助です。実際の生活動作や臨床所見と合わせて解釈してください。
